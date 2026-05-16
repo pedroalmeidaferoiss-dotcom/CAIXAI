@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CaixaIA — Fechamento Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #0a0e1a;
+  --bg3: #0f1422;
+  --card: #111827;
+  --card2: #1a2235;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --cyan: #00e5ff;
+  --cyan2: #00b8d4;
+  --cyan-dim: rgba(0,229,255,0.12);
+  --cyan-dim2: rgba(0,229,255,0.06);
+  --text: #f0f4ff;
+  --text2: #8892a4;
+  --text3: #4a5568;
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.12);
+  --red: #ff5252;
+  --red-dim: rgba(255,82,82,0.12);
+  --amber: #ffab40;
+  --amber-dim: rgba(255,171,64,0.12);
+  --purple: #b388ff;
+  --purple-dim: rgba(179,136,255,0.12);
+  --radius: 12px;
+  --radius2: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── TELA SISTEMA ─── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ─── LANDING ─── */
+#screen-landing {
+  background: var(--bg);
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-grid {
+  position: absolute; inset: 0; opacity: 0.04;
+  background-image:
+    linear-gradient(rgba(0,229,255,.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,.6) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.landing-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.landing-content {
+  position: relative; z-index: 2;
+  text-align: center;
+  max-width: 680px;
+  padding: 2rem;
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2.5rem;
+}
+
+.logo-icon {
+  width: 48px; height: 48px;
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 20px;
+  color: var(--cyan);
+  letter-spacing: -1px;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 22px;
+  color: var(--text);
+}
+
+.logo-text span { color: var(--cyan); }
+
+.landing-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.25rem;
+  letter-spacing: -1px;
+}
+
+.landing-title em {
+  font-style: normal;
+  color: var(--cyan);
+}
+
+.landing-sub {
+  font-size: 1.05rem;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
+  margin-left: auto; margin-right: auto;
+}
+
+.btn-group {
+  display: flex; gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary {
+  background: var(--cyan);
+  color: #000;
+}
+.btn-primary:hover { background: #33ebff; transform: translateY(-1px); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--cyan-dim2);
+}
+
+.features-strip {
+  display: flex; gap: 2rem;
+  justify-content: center;
+  margin-top: 3.5rem;
+  flex-wrap: wrap;
+}
+
+.feat-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; color: var(--text3);
+}
+
+.feat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+}
+
+/* ─── AUTH SCREENS ─── */
+#screen-login, #screen-register, #screen-pending {
+  background: var(--bg);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth-box {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-logo {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 2rem;
+}
+
+.auth-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.auth-sub {
+  font-size: 0.9rem; color: var(--text2);
+  margin-bottom: 1.75rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-input:focus { border-color: var(--cyan); }
+.form-input::placeholder { color: var(--text3); }
+
+.form-input select {
+  background: var(--card);
+  color: var(--text);
+}
+
+select.form-input {
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.form-input option {
+  background: var(--card);
+}
+
+.form-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.25rem 0;
+}
+
+.form-note {
+  font-size: 0.82rem; color: var(--text3);
+  text-align: center; margin-top: 1rem;
+}
+
+.form-note a {
+  color: var(--cyan); cursor: pointer; text-decoration: none;
+}
+
+.form-note a:hover { text-decoration: underline; }
+
+.pending-card {
+  text-align: center;
+  padding: 2.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.pending-icon {
+  width: 64px; height: 64px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 1.25rem;
+}
+
+/* ─── LAYOUT PRINCIPAL ─── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo .logo-icon { width: 36px; height: 36px; font-size: 15px; }
+.sidebar-logo .logo-text { font-size: 17px; }
+
+.sidebar-rede {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-rede-label {
+  font-size: 0.7rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+
+.sidebar-rede-name {
+  font-size: 0.88rem; font-weight: 500;
+  color: var(--cyan);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0.75rem 0.75rem;
+}
+
+.nav-section {
+  margin-bottom: 1.25rem;
+}
+
+.nav-section-label {
+  font-size: 0.68rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 0.5rem;
+  margin-bottom: 4px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius2);
+  font-size: 0.88rem;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  border: none; background: none; width: 100%; text-align: left;
+}
+
+.nav-item:hover { background: var(--card); color: var(--text); }
+
+.nav-item.active {
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  font-weight: 500;
+}
+
+.nav-item svg { width: 17px; height: 17px; opacity: 0.8; flex-shrink: 0; }
+.nav-item.active svg { opacity: 1; }
+
+.sidebar-user {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 0.82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 0.72rem; color: var(--text3); }
+
+.logout-btn {
+  width: 28px; height: 28px;
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover { background: var(--red-dim); color: var(--red); }
+
+/* ─── MAIN CONTENT ─── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg3);
+}
+
+.topbar {
+  display: flex; align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  gap: 1rem;
+}
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  flex: 1;
+}
+
+.topbar-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem; font-weight: 500;
+  background: var(--cyan-dim);
+  color: var(--cyan);
+  border: 1px solid rgba(0,229,255,0.2);
+}
+
+.page-body { flex: 1; padding: 1.5rem; overflow-y: auto; }
+
+/* ─── VIEWS dentro do app ─── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text);
+}
+
+.card-title svg { width: 17px; height: 17px; color: var(--cyan); }
+
+/* ─── STAT CARDS ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.7rem; font-weight: 700;
+  line-height: 1;
+}
+
+.stat-sub {
+  font-size: 0.75rem; color: var(--text3);
+  margin-top: 4px;
+}
+
+.stat-up { color: var(--green); }
+.stat-down { color: var(--red); }
+.stat-neutral { color: var(--text); }
+.stat-amber { color: var(--amber); }
+.stat-cyan { color: var(--cyan); }
+
+/* ─── GRID ─── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .sidebar { width: 200px; min-width: 200px; }
+}
+
+/* ─── TABELA ─── */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+thead th {
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 0.72rem; font-weight: 500;
+  color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+tbody tr:last-child td { border-bottom: none; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem; font-weight: 500;
+}
+
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); }
+.badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+.badge-purple { background: var(--purple-dim); color: var(--purple); }
+
+/* ─── INPUT CAIXA ─── */
+.caixa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 700px) { .caixa-grid { grid-template-columns: 1fr; } }
+
+.input-money {
+  position: relative;
+}
+
+.input-money-prefix {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem; color: var(--text3);
+  pointer-events: none;
+}
+
+.input-money .form-input { padding-left: 32px; }
+
+.section-divider {
+  font-size: 0.75rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin: 1.25rem 0 0.75rem;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── SANGRIAS ─── */
+.sangria-list { display: flex; flex-direction: column; gap: 8px; }
+
+.sangria-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 10px 12px;
+}
+
+.sangria-item input {
+  flex: 1;
+  background: none; border: none;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; outline: none;
+}
+
+.sangria-item input::placeholder { color: var(--text3); }
+
+.sangria-valor {
+  width: 120px;
+  background: none; border: none;
+  color: var(--amber); font-family: 'Syne', sans-serif;
+  font-size: 0.9rem; font-weight: 600;
+  outline: none; text-align: right;
+}
+
+.sangria-valor::placeholder { color: var(--text3); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+
+.rm-btn {
+  width: 26px; height: 26px;
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.rm-btn:hover { background: var(--red-dim); color: var(--red); }
+
+.add-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px dashed var(--border);
+  color: var(--text3); font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; padding: 8px 12px;
+  border-radius: var(--radius2); cursor: pointer;
+  width: 100%; justify-content: center;
+  transition: all 0.2s;
+}
+
+.add-btn:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim2); }
+
+/* ─── RESUMO CAIXA ─── */
+.resumo-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.resumo-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.resumo-row:last-of-type { border-bottom: none; }
+
+.resumo-row .label { color: var(--text2); }
+.resumo-row .val { font-weight: 500; font-family: 'Syne', sans-serif; }
+
+.resumo-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0 4px;
+  font-size: 1rem;
+}
+
+.resumo-total .label { font-weight: 500; color: var(--text); }
+.resumo-total .val { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; }
+
+.resumo-status {
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--radius2);
+  font-size: 0.82rem; font-weight: 500;
+  margin-top: 1rem;
+}
+
+.status-ok { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+.status-warn { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(255,171,64,0.2); }
+.status-err { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,82,82,0.2); }
+
+/* ─── IA ANÁLISE ─── */
+.ia-box {
+  background: linear-gradient(135deg, rgba(0,229,255,0.04) 0%, rgba(179,136,255,0.04) 100%);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.ia-box::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+}
+
+.ia-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.ia-icon {
+  width: 36px; height: 36px;
+  background: var(--cyan-dim);
+  border: 1px solid rgba(0,229,255,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ia-icon svg { width: 18px; height: 18px; color: var(--cyan); }
+
+.ia-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  color: var(--cyan);
+}
+
+.ia-subtitle { font-size: 0.75rem; color: var(--text3); }
+
+.ia-content {
+  font-size: 0.9rem; color: var(--text2);
+  line-height: 1.7;
+}
+
+.ia-loading {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text3); font-size: 0.88rem;
+}
+
+.ia-dots span {
+  display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--cyan);
+  animation: dotpulse 1.4s infinite ease-in-out;
+  margin: 0 2px;
+}
+
+.ia-dots span:nth-child(1) { animation-delay: 0s; }
+.ia-dots span:nth-child(2) { animation-delay: 0.2s; }
+.ia-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotpulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.ia-insights { display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
+
+.insight-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius2);
+  border-left: 3px solid transparent;
+}
+
+.insight-item.crit { border-color: var(--red); }
+.insight-item.warn { border-color: var(--amber); }
+.insight-item.info { border-color: var(--cyan); }
+.insight-item.ok { border-color: var(--green); }
+
+.insight-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.insight-text { font-size: 0.85rem; color: var(--text2); line-height: 1.5; }
+.insight-text strong { color: var(--text); font-weight: 500; }
+
+/* ─── PAINEL ADM ─── */
+.operador-row {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.op-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--purple-dim);
+  border: 1px solid var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--purple);
+  flex-shrink: 0;
+}
+
+.op-info { flex: 1; min-width: 0; }
+.op-name { font-size: 0.88rem; font-weight: 500; }
+.op-meta { font-size: 0.75rem; color: var(--text3); }
+
+.op-diff {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  min-width: 80px; text-align: right;
+}
+
+/* ─── APROVAÇÃO ─── */
+.pending-list { display: flex; flex-direction: column; gap: 10px; }
+
+.pending-item {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+.pending-item.approved { border-color: rgba(0,230,118,0.2); }
+.pending-item.rejected { border-color: rgba(255,82,82,0.2); opacity: 0.5; }
+
+.pending-info { flex: 1; }
+.pending-nome { font-size: 0.92rem; font-weight: 500; margin-bottom: 3px; }
+.pending-meta { font-size: 0.78rem; color: var(--text3); }
+.pending-rede { color: var(--cyan); font-weight: 500; }
+
+.action-btns { display: flex; gap: 8px; }
+
+.btn-approve {
+  padding: 7px 16px;
+  background: var(--green-dim);
+  border: 1px solid rgba(0,230,118,0.3);
+  border-radius: var(--radius2);
+  color: var(--green); font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.btn-approve:hover { background: rgba(0,230,118,0.2); }
+
+.btn-reject {
+  padding: 7px 16px;
+  background: var(--red-dim);
+  border: 1px solid rgba(255,82,82,0.3);
+  border-radius: var(--radius2);
+  color: var(--red); font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.btn-reject:hover { background: rgba(255,82,82,0.2); }
+
+/* ─── HISTÓRICO ─── */
+.hist-day {
+  margin-bottom: 1.5rem;
+}
+
+.hist-day-label {
+  font-size: 0.75rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+/* ─── PROGRESS BAR ─── */
+.progress-bar {
+  height: 6px;
+  background: var(--bg2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--cyan);
+  transition: width 0.8s ease;
+}
+
+.progress-fill.green { background: var(--green); }
+.progress-fill.red { background: var(--red); }
+.progress-fill.amber { background: var(--amber); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem; right: 1.5rem;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.88rem;
+  box-shadow: var(--shadow);
+  z-index: 1000;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 320px;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { font-size: 20px; flex-shrink: 0; }
+.toast-text { flex: 1; }
+.toast-title { font-weight: 500; margin-bottom: 2px; }
+.toast-sub { font-size: 0.78rem; color: var(--text3); }
+
+/* ─── CHART SIMPLES ─── */
+.mini-chart {
+  display: flex; align-items: flex-end; gap: 4px;
+  height: 60px; margin-top: 12px;
+}
+
+.bar {
+  flex: 1;
+  background: var(--cyan-dim);
+  border-radius: 4px 4px 0 0;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+
+.bar:hover { background: rgba(0,229,255,0.25); }
+.bar.red-bar { background: var(--red-dim); }
+.bar.red-bar:hover { background: rgba(255,82,82,0.25); }
+.bar.green-bar { background: var(--green-dim); }
+.bar.green-bar:hover { background: rgba(0,230,118,0.25); }
+
+/* ─── FORMAS PAGAMENTO ─── */
+.payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.payment-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 10px 12px;
+}
+
+.payment-label { font-size: 0.75rem; color: var(--text3); margin-bottom: 4px; }
+.payment-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 600; }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%; max-width: 480px;
+  transform: scale(0.95);
+  transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal { transform: scale(1); }
+
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.modal-sub {
+  font-size: 0.85rem; color: var(--text2);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+/* ─── MISC ─── */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-1 { gap: 8px; }
+.gap-2 { gap: 16px; }
+.full-w { width: 100%; }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     TELA 1: LANDING
+═══════════════════════════════════════════════ -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-grid"></div>
+  <div class="landing-glow"></div>
+  <div class="landing-content">
+    <div class="logo-mark">
+      <div class="logo-icon">C₿</div>
+      <div class="logo-text">Caixa<span>IA</span></div>
+    </div>
+    <h1 class="landing-title">
+      Fechamento de caixa<br><em>com inteligência real</em>
+    </h1>
+    <p class="landing-sub">
+      Plataforma SaaS para farmácias e redes varejistas. Analise perdas,
+      identifique erros e tome decisões com IA — em tempo real.
+    </p>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="goTo('screen-register')">
+        Criar conta gratuita
+      </button>
+      <button class="btn btn-outline" onclick="goTo('screen-login')">
+        Entrar no sistema
+      </button>
+    </div>
+    <div class="features-strip">
+      <div class="feat-item"><div class="feat-dot"></div> Multi-rede</div>
+      <div class="feat-item"><div class="feat-dot"></div> IA por operador</div>
+      <div class="feat-item"><div class="feat-dot"></div> Sangrias ilimitadas</div>
+      <div class="feat-item"><div class="feat-dot"></div> Relatório diário</div>
+      <div class="feat-item"><div class="feat-dot"></div> Aprovação de acesso</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TELA 2: LOGIN
+═══════════════════════════════════════════════ -->
+<div id="screen-login" class="screen">
+  <div class="auth-box" style="margin: auto;">
+    <div class="auth-logo">
+      <div class="logo-icon" style="width:38px;height:38px;font-size:16px;">C₿</div>
+      <div class="logo-text" style="font-size:18px;">Caixa<span style="color:var(--cyan)">IA</span></div>
+    </div>
+    <h2 class="auth-title">Bem-vindo de volta</h2>
+    <p class="auth-sub">Acesse sua rede de farmácias</p>
+
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input type="email" class="form-input" id="login-email" placeholder="seu@email.com" value="admin@farmarede.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-input" id="login-pass" placeholder="••••••••" value="12345678">
+    </div>
+
+    <div class="form-group" style="margin-top:0.25rem;">
+      <label class="form-label">Entrar como</label>
+      <select class="form-input" id="login-role">
+        <option value="admin">Administrador / Dono</option>
+        <option value="operator">Operador de Caixa</option>
+        <option value="master">Master (PJ DEV)</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary full-w mt-2" style="justify-content:center;" onclick="doLogin()">
+      Entrar
+    </button>
+
+    <p class="form-note mt-2">
+      Não tem conta? <a onclick="goTo('screen-register')">Criar cadastro</a>
+    </p>
+    <p class="form-note">
+      <a onclick="goTo('screen-landing')" style="color:var(--text3);">← Voltar</a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TELA 3: CADASTRO
+═══════════════════════════════════════════════ -->
+<div id="screen-register" class="screen">
+  <div class="auth-box" style="margin: auto; max-width: 480px;">
+    <div class="auth-logo">
+      <div class="logo-icon" style="width:38px;height:38px;font-size:16px;">C₿</div>
+      <div class="logo-text" style="font-size:18px;">Caixa<span style="color:var(--cyan)">IA</span></div>
+    </div>
+    <h2 class="auth-title">Criar conta</h2>
+    <p class="auth-sub">Configure sua rede de farmácias no CaixaIA</p>
+
+    <div id="step-1">
+      <div style="display:flex;gap:8px;margin-bottom:1.25rem;">
+        <div style="flex:1;height:3px;border-radius:99px;background:var(--cyan);"></div>
+        <div style="flex:1;height:3px;border-radius:99px;background:var(--border);"></div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem;">Passo 1 de 2 — Dados pessoais</p>
+
+      <div class="form-group">
+        <label class="form-label">Nome completo</label>
+        <input type="text" class="form-input" id="reg-nome" placeholder="João da Silva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" class="form-input" id="reg-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input type="password" class="form-input" id="reg-pass" placeholder="Mínimo 8 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Perfil</label>
+        <select class="form-input" id="reg-role">
+          <option value="admin">Dono / Administrador da Rede</option>
+          <option value="operator">Operador de Caixa</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary full-w mt-2" style="justify-content:center;" onclick="regStep2()">
+        Próximo passo →
+      </button>
+    </div>
+
+    <div id="step-2" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:1.25rem;">
+        <div style="flex:1;height:3px;border-radius:99px;background:var(--cyan);"></div>
+        <div style="flex:1;height:3px;border-radius:99px;background:var(--cyan);"></div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem;">Passo 2 de 2 — Sua rede</p>
+
+      <div id="rede-nova-section">
+        <div class="form-group">
+          <label class="form-label">Nome da rede / farmácia</label>
+          <input type="text" class="form-input" id="reg-rede" placeholder="Ex: FarmáciaBom, Rede Saúde...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CNPJ</label>
+          <input type="text" class="form-input" id="reg-cnpj" placeholder="00.000.000/0000-00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade / Estado</label>
+          <input type="text" class="form-input" id="reg-cidade" placeholder="Serra, ES">
+        </div>
+      </div>
+
+      <div id="rede-existente-section" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Código da rede</label>
+          <input type="text" class="form-input" id="reg-codigo" placeholder="Ex: FARMASAUDE-2024">
+        </div>
+        <p style="font-size:0.8rem;color:var(--text3);margin-top:0.25rem;">
+          Peça o código para o administrador da sua rede.
+        </p>
+      </div>
+
+      <div class="form-group" id="rede-toggle-group">
+        <label class="form-label">Situação</label>
+        <select class="form-input" id="reg-rede-tipo" onchange="toggleRedeTipo()">
+          <option value="nova">Quero criar minha rede (sou o dono)</option>
+          <option value="existente">Vou entrar em uma rede existente (sou operador)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="document.getElementById('step-1').style.display='block';document.getElementById('step-2').style.display='none';">
+          ← Voltar
+        </button>
+        <button class="btn btn-primary" style="flex:2;justify-content:center;" onclick="doRegister()">
+          Criar conta
+        </button>
+      </div>
+    </div>
+
+    <p class="form-note mt-2">
+      Já tem conta? <a onclick="goTo('screen-login')">Entrar</a>
+    </p>
+    <p class="form-note">
+      <a onclick="goTo('screen-landing')" style="color:var(--text3);">← Voltar ao início</a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TELA 4: AGUARDANDO APROVAÇÃO
+═══════════════════════════════════════════════ -->
+<div id="screen-pending" class="screen">
+  <div class="auth-box" style="margin: auto;">
+    <div class="pending-card">
+      <div class="pending-icon">⏳</div>
+      <h2 class="auth-title" style="margin-bottom:0.5rem;">Cadastro enviado!</h2>
+      <p style="font-size:0.9rem;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
+        Seu cadastro foi recebido e está aguardando aprovação do administrador da rede
+        <strong id="pending-rede-name" style="color:var(--cyan);">FarmáciaBom</strong>.
+        Assim que aprovado, você receberá acesso completo.
+      </p>
+      <div style="padding:12px;background:var(--amber-dim);border-radius:var(--radius2);border:1px solid rgba(255,171,64,0.2);font-size:0.82rem;color:var(--amber);margin-bottom:1.5rem;">
+        ⚡ O administrador será notificado imediatamente.
+      </div>
+      <button class="btn btn-outline full-w" style="justify-content:center;" onclick="goTo('screen-login')">
+        ← Voltar ao login
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     APP PRINCIPAL (OPERADOR)
+═══════════════════════════════════════════════ -->
+<div id="screen-operator" class="screen">
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon" style="width:36px;height:36px;font-size:14px;">C₿</div>
+        <div class="logo-text" style="font-size:16px;">Caixa<span style="color:var(--cyan)">IA</span></div>
+      </div>
+      <div class="sidebar-rede">
+        <div class="sidebar-rede-label">Rede ativa</div>
+        <div class="sidebar-rede-name" id="op-rede-name">FarmáciaBom</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Caixa</div>
+          <button class="nav-item active" onclick="opView('view-caixa', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8h18M3 8a2 2 0 01-2-2V5a2 2 0 012-2h18a2 2 0 012 2v1a2 2 0 01-2 2M3 8l2 13h14l2-13"/></svg>
+            Lançar Caixa
+          </button>
+          <button class="nav-item" onclick="opView('view-historico', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Histórico
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="op-avatar">MA</div>
+        <div class="user-info">
+          <div class="user-name" id="op-username">Maria Alves</div>
+          <div class="user-role">Operador</div>
+        </div>
+        <button class="logout-btn" onclick="goTo('screen-landing')" title="Sair">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-title" id="op-page-title">Lançamento de Caixa</div>
+        <div id="op-date" style="font-size:0.82rem;color:var(--text3);"></div>
+        <div class="topbar-badge">Turno: 08h–17h</div>
+      </div>
+
+      <div class="page-body">
+
+        <!-- VIEW: LANÇAR CAIXA -->
+        <div class="view active" id="view-caixa">
+          <div style="display:grid;grid-template-columns:1fr 300px;gap:1.25rem;">
+            <!-- Formulário -->
+            <div>
+              <!-- Caixa inicial -->
+              <div class="card mb-2">
+                <div class="card-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Abertura do Caixa
+                </div>
+                <div class="caixa-grid">
+                  <div class="form-group">
+                    <label class="form-label">Caixa Inicial (fundo de caixa)</label>
+                    <div class="input-money">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="fundo-caixa" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Hora de abertura</label>
+                    <input type="time" class="form-input" id="hora-abertura" value="08:00">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vendas -->
+              <div class="card mb-2">
+                <div class="card-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                  Vendas por Forma de Pagamento
+                </div>
+                <div class="payment-grid">
+                  <div class="payment-item">
+                    <div class="payment-label">Dinheiro (espécie)</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-dinheiro" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="payment-item">
+                    <div class="payment-label">Crédito</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-credito" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="payment-item">
+                    <div class="payment-label">Débito</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-debito" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="payment-item">
+                    <div class="payment-label">Pix</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-pix" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="payment-item">
+                    <div class="payment-label">Convênio / Plano</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-convenio" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="payment-item">
+                    <div class="payment-label">Outros</div>
+                    <div class="input-money" style="margin-top:6px;">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="venda-outros" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sangrias -->
+              <div class="card mb-2">
+                <div class="card-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                  Sangrias (retiradas do caixa)
+                </div>
+                <div class="sangria-list" id="sangria-list">
+                  <div class="sangria-item">
+                    <input placeholder="Motivo da sangria (ex: depósito banco, pagto fornecedor...)" oninput="calcResumo()">
+                    <input class="sangria-valor" placeholder="R$ 0,00" type="number" step="0.01" oninput="calcResumo()">
+                    <button class="rm-btn" onclick="rmSangria(this)">✕</button>
+                  </div>
+                </div>
+                <button class="add-btn mt-1" onclick="addSangria()">
+                  + Adicionar sangria
+                </button>
+              </div>
+
+              <!-- Troco e sobras -->
+              <div class="card mb-2">
+                <div class="card-title">
+                  <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  Fechamento Físico
+                </div>
+                <div class="caixa-grid">
+                  <div class="form-group">
+                    <label class="form-label">Dinheiro físico contado no caixa</label>
+                    <div class="input-money">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="dinheiro-fisico" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Troco devolvido (total)</label>
+                    <div class="input-money">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="troco-total" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Devoluções / cancelamentos</label>
+                    <div class="input-money">
+                      <span class="input-money-prefix">R$</span>
+                      <input type="number" class="form-input" id="devolucoes" placeholder="0,00" step="0.01" oninput="calcResumo()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Hora de fechamento</label>
+                    <input type="time" class="form-input" id="hora-fechamento" value="17:00">
+                  </div>
+                </div>
+                <div class="form-group mt-1">
+                  <label class="form-label">Observações do operador (opcional)</label>
+                  <textarea class="form-input" rows="2" id="obs-operador" placeholder="Alguma ocorrência, problema, dúvida..." style="resize:none;"></textarea>
+                </div>
+              </div>
+
+              <button class="btn btn-primary full-w" style="justify-content:center;padding:14px;" onclick="fecharCaixa()">
+                🔒 Fechar Caixa e Enviar para Análise da IA
+              </button>
+            </div>
+
+            <!-- Resumo lateral -->
+            <div>
+              <div class="resumo-card">
+                <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:600;margin-bottom:1rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;">
+                  Resumo em tempo real
+                </div>
+
+                <div class="resumo-row">
+                  <span class="label">Fundo inicial</span>
+                  <span class="val" id="r-fundo">R$ 0,00</span>
+                </div>
+                <div class="resumo-row">
+                  <span class="label">Total vendas</span>
+                  <span class="val stat-cyan" id="r-vendas">R$ 0,00</span>
+                </div>
+                <div class="resumo-row">
+                  <span class="label">Sangrias</span>
+                  <span class="val stat-amber" id="r-sangrias">R$ 0,00</span>
+                </div>
+                <div class="resumo-row">
+                  <span class="label">Devoluções</span>
+                  <span class="val stat-amber" id="r-devolucoes">R$ 0,00</span>
+                </div>
+                <div class="resumo-row">
+                  <span class="label">Troco devolvido</span>
+                  <span class="val stat-amber" id="r-troco">R$ 0,00</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="resumo-row">
+                  <span class="label">Esperado em caixa</span>
+                  <span class="val" id="r-esperado">R$ 0,00</span>
+                </div>
+                <div class="resumo-row">
+                  <span class="label">Físico contado</span>
+                  <span class="val" id="r-fisico">R$ 0,00</span>
+                </div>
+
+                <div class="resumo-total">
+                  <span class="label">Diferença</span>
+                  <span class="val" id="r-diff">R$ 0,00</span>
+                </div>
+
+                <div class="resumo-status status-warn" id="r-status">
+                  Preencha os campos
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW: HISTÓRICO OPERADOR -->
+        <div class="view" id="view-historico">
+          <div class="hist-day mb-3">
+            <div class="hist-day-label">Hoje</div>
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Turno</th>
+                      <th>Total Vendas</th>
+                      <th>Sangrias</th>
+                      <th>Diferença</th>
+                      <th>Status IA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="color:var(--text);">08h–17h</td>
+                      <td>R$ 3.842,00</td>
+                      <td>R$ 500,00</td>
+                      <td class="stat-green">+R$ 0,50</td>
+                      <td><span class="badge badge-green">✓ Aprovado</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="hist-day">
+            <div class="hist-day-label">Últimos 7 dias</div>
+            <div class="card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Total Vendas</th>
+                      <th>Sangrias</th>
+                      <th>Diferença</th>
+                      <th>Status IA</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hist-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     APP PRINCIPAL (ADMIN DA REDE)
+═══════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <div class="app-layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon" style="width:36px;height:36px;font-size:14px;">C₿</div>
+        <div class="logo-text" style="font-size:16px;">Caixa<span style="color:var(--cyan)">IA</span></div>
+      </div>
+      <div class="sidebar-rede">
+        <div class="sidebar-rede-label">Rede</div>
+        <div class="sidebar-rede-name" id="adm-rede-name">FarmáciaBom</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Visão geral</div>
+          <button class="nav-item active" onclick="admView('view-dashboard', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </button>
+          <button class="nav-item" onclick="admView('view-ia', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+            Análise IA
+          </button>
+          <button class="nav-item" onclick="admView('view-relatorio', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Relatório
+          </button>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Equipe</div>
+          <button class="nav-item" onclick="admView('view-aprovacao', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Aprovação
+            <span class="badge badge-amber" style="margin-left:auto;padding:2px 7px;">3</span>
+          </button>
+          <button class="nav-item" onclick="admView('view-operadores', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Operadores
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="adm-avatar" style="background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);">JD</div>
+        <div class="user-info">
+          <div class="user-name" id="adm-username">João Dono</div>
+          <div class="user-role" style="color:var(--cyan);">Administrador</div>
+        </div>
+        <button class="logout-btn" onclick="goTo('screen-landing')" title="Sair">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-title" id="adm-page-title">Dashboard da Rede</div>
+        <div id="adm-date" style="font-size:0.82rem;color:var(--text3);"></div>
+        <div class="topbar-badge" style="background:var(--purple-dim);color:var(--purple);border-color:rgba(179,136,255,0.2);">Admin</div>
+      </div>
+
+      <div class="page-body">
+
+        <!-- DASHBOARD -->
+        <div class="view active" id="view-dashboard">
+          <div class="stats-grid mb-2">
+            <div class="stat-card">
+              <div class="stat-label">Faturamento Hoje</div>
+              <div class="stat-value stat-cyan">R$ 12.840</div>
+              <div class="stat-sub">↑ 8% vs ontem</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Diferença Total</div>
+              <div class="stat-value stat-red">−R$ 47,30</div>
+              <div class="stat-sub">3 caixas com desvio</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Sangrias</div>
+              <div class="stat-value stat-amber">R$ 2.100</div>
+              <div class="stat-sub">5 retiradas hoje</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Caixas Fechados</div>
+              <div class="stat-value stat-green">4/6</div>
+              <div class="stat-sub">2 ainda abertos</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- Gráfico semana -->
+            <div class="card">
+              <div class="card-title">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Faturamento — últimos 7 dias
+              </div>
+              <div class="mini-chart" id="dash-chart"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;">
+                <span style="font-size:0.7rem;color:var(--text3);">Seg</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Ter</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Qua</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Qui</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Sex</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Sáb</span>
+                <span style="font-size:0.7rem;color:var(--text3);">Dom</span>
+              </div>
+            </div>
+
+            <!-- Operadores desvio -->
+            <div class="card">
+              <div class="card-title">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Desvios por Operador Hoje
+              </div>
+              <div id="op-desvios"></div>
+            </div>
+          </div>
+
+          <!-- Formas de pagamento -->
+          <div class="card mb-2">
+            <div class="card-title">
+              <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              Vendas por Forma de Pagamento — Hoje
+            </div>
+            <div id="payment-bars"></div>
+          </div>
+        </div>
+
+        <!-- ANÁLISE IA -->
+        <div class="view" id="view-ia">
+          <div class="ia-box mb-2">
+            <div class="ia-header">
+              <div class="ia-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <div>
+                <div class="ia-title">Análise Inteligente de Perdas</div>
+                <div class="ia-subtitle">Processado em: <span id="ia-timestamp">agora</span></div>
+              </div>
+              <button class="btn btn-outline" style="margin-left:auto;font-size:0.8rem;padding:8px 14px;" onclick="runIAAnalysis()">
+                ↺ Reanalisar
+              </button>
+            </div>
+
+            <div id="ia-result-area">
+              <div class="ia-loading">
+                <div class="ia-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                Clique em "Reanalisar" para gerar análise da IA
+              </div>
+            </div>
+          </div>
+
+          <!-- Dados para IA analisar -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Dados do dia para análise</div>
+              <div class="resumo-row"><span class="label">Faturamento bruto</span><span class="val stat-cyan">R$ 12.840,00</span></div>
+              <div class="resumo-row"><span class="label">Total sangrias</span><span class="val stat-amber">R$ 2.100,00</span></div>
+              <div class="resumo-row"><span class="label">Devoluções</span><span class="val stat-amber">R$ 320,00</span></div>
+              <div class="resumo-row"><span class="label">Diferença total</span><span class="val stat-red">−R$ 47,30</span></div>
+              <div class="resumo-row"><span class="label">Caixas analisados</span><span class="val">4 de 6</span></div>
+              <div class="resumo-row"><span class="label">Operadores com desvio</span><span class="val stat-red">3</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Padrão de desvios (semana)</div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;" id="desvio-semana"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RELATÓRIO -->
+        <div class="view" id="view-relatorio">
+          <div class="flex-between mb-2">
+            <div>
+              <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">Relatório Detalhado</h3>
+              <p style="font-size:0.82rem;color:var(--text3);">Histórico completo da rede</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <select class="form-input" style="width:auto;font-size:0.82rem;">
+                <option>Últimos 7 dias</option>
+                <option>Últimos 30 dias</option>
+                <option>Este mês</option>
+              </select>
+              <button class="btn btn-outline" style="font-size:0.82rem;padding:8px 14px;">
+                ↓ Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid mb-2">
+            <div class="stat-card">
+              <div class="stat-label">Fat. no período</div>
+              <div class="stat-value stat-cyan">R$ 84.320</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total perdas</div>
+              <div class="stat-value stat-red">R$ 312,80</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Melhor dia</div>
+              <div class="stat-value stat-green">Sexta</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Pior operador</div>
+              <div class="stat-value stat-amber">Carlos M.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Histórico de fechamentos</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Operador</th>
+                    <th>Turno</th>
+                    <th>Vendas</th>
+                    <th>Sangrias</th>
+                    <th>Diferença</th>
+                    <th>IA</th>
+                  </tr>
+                </thead>
+                <tbody id="rel-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- APROVAÇÃO -->
+        <div class="view" id="view-aprovacao">
+          <div class="flex-between mb-2">
+            <div>
+              <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">Aprovação de Cadastros</h3>
+              <p style="font-size:0.82rem;color:var(--text3);">Gerencie quem pode acessar sua rede</p>
+            </div>
+          </div>
+
+          <div class="pending-list" id="pending-list"></div>
+        </div>
+
+        <!-- OPERADORES -->
+        <div class="view" id="view-operadores">
+          <div class="flex-between mb-2">
+            <div>
+              <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">Operadores da Rede</h3>
+              <p style="font-size:0.82rem;color:var(--text3);">Desempenho por operador</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Operador</th>
+                    <th>Status</th>
+                    <th>Fechamentos</th>
+                    <th>Fat. total</th>
+                    <th>Dif. acum.</th>
+                    <th>Score IA</th>
+                  </tr>
+                </thead>
+                <tbody id="op-table-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     APP MASTER (PJ DEV)
+═══════════════════════════════════════════════ -->
+<div id="screen-master" class="screen">
+  <div class="app-layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon" style="width:36px;height:36px;font-size:14px;">C₿</div>
+        <div class="logo-text" style="font-size:16px;">Caixa<span style="color:var(--cyan)">IA</span></div>
+      </div>
+      <div class="sidebar-rede" style="background:var(--cyan-dim2);border-bottom:1px solid rgba(0,229,255,0.1);">
+        <div class="sidebar-rede-label">Painel</div>
+        <div class="sidebar-rede-name">PJ DEV — Master</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Plataforma</div>
+          <button class="nav-item active" onclick="masterView('view-master-dash', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Visão Geral
+          </button>
+          <button class="nav-item" onclick="masterView('view-master-redes', this)">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+            Redes Cadastradas
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" style="background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);">PJ</div>
+        <div class="user-info">
+          <div class="user-name">Pedro — PJ DEV</div>
+          <div class="user-role" style="color:var(--cyan);">Master Admin</div>
+        </div>
+        <button class="logout-btn" onclick="goTo('screen-landing')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="topbar-title" id="master-page-title">Visão Geral da Plataforma</div>
+        <div class="topbar-badge" style="background:linear-gradient(135deg,rgba(0,229,255,0.15),rgba(179,136,255,0.15));color:var(--cyan);border:1px solid rgba(0,229,255,0.3);">🔑 Master</div>
+      </div>
+      <div class="page-body">
+
+        <!-- MASTER DASH -->
+        <div class="view active" id="view-master-dash">
+          <div class="stats-grid mb-2">
+            <div class="stat-card">
+              <div class="stat-label">Redes Ativas</div>
+              <div class="stat-value stat-cyan">7</div>
+              <div class="stat-sub">2 novas este mês</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Usuários</div>
+              <div class="stat-value stat-purple">43</div>
+              <div class="stat-sub">Operadores + Admins</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Caixas Fechados Hoje</div>
+              <div class="stat-value stat-green">28</div>
+              <div class="stat-sub">Plataforma toda</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Análises IA Hoje</div>
+              <div class="stat-value stat-amber">28</div>
+              <div class="stat-sub">100% cobertura</div>
+            </div>
+          </div>
+
+          <div class="ia-box">
+            <div class="ia-header">
+              <div class="ia-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div>
+                <div class="ia-title">Status da Plataforma</div>
+                <div class="ia-subtitle">Todos os sistemas operacionais</div>
+              </div>
+            </div>
+            <div class="ia-insights">
+              <div class="insight-item ok">
+                <div class="insight-icon">✓</div>
+                <div class="insight-text"><strong>Motor de IA ativo.</strong> Todas as análises de fechamento sendo processadas normalmente.</div>
+              </div>
+              <div class="insight-item info">
+                <div class="insight-icon">◉</div>
+                <div class="insight-text"><strong>3 cadastros aguardando aprovação</strong> na rede FarmáciaBom. Notificação enviada ao administrador.</div>
+              </div>
+              <div class="insight-item warn">
+                <div class="insight-icon">△</div>
+                <div class="insight-text"><strong>Rede "FarmaPlus Vitória"</strong> apresentou diferença acumulada de R$ 380,00 esta semana. Recomenda-se contato proativo.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MASTER REDES -->
+        <div class="view" id="view-master-redes">
+          <div class="card">
+            <div class="card-title">Todas as Redes Cadastradas</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rede</th>
+                    <th>Cidade</th>
+                    <th>Operadores</th>
+                    <th>Caixas/dia</th>
+                    <th>Status</th>
+                    <th>Plano</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">FarmáciaBom</td>
+                    <td>Serra, ES</td>
+                    <td>8</td>
+                    <td>12</td>
+                    <td><span class="badge badge-green">Ativo</span></td>
+                    <td><span class="badge badge-cyan">Pro</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">FarmaPlus Vitória</td>
+                    <td>Vitória, ES</td>
+                    <td>12</td>
+                    <td>18</td>
+                    <td><span class="badge badge-green">Ativo</span></td>
+                    <td><span class="badge badge-purple">Enterprise</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">Rede Saúde ES</td>
+                    <td>Cariacica, ES</td>
+                    <td>5</td>
+                    <td>8</td>
+                    <td><span class="badge badge-green">Ativo</span></td>
+                    <td><span class="badge badge-cyan">Pro</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">Farmatec</td>
+                    <td>Vila Velha, ES</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td><span class="badge badge-amber">Trial</span></td>
+                    <td><span class="badge badge-amber">Starter</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">FarmaCentro BH</td>
+                    <td>Belo Horizonte, MG</td>
+                    <td>15</td>
+                    <td>22</td>
+                    <td><span class="badge badge-green">Ativo</span></td>
+                    <td><span class="badge badge-purple">Enterprise</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">Rede Popular RJ</td>
+                    <td>Rio de Janeiro, RJ</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td><span class="badge badge-red">Pendente</span></td>
+                    <td><span class="badge badge-amber">Starter</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text);font-weight:500;">FarmaClub SP</td>
+                    <td>São Paulo, SP</td>
+                    <td>20</td>
+                    <td>35</td>
+                    <td><span class="badge badge-green">Ativo</span></td>
+                    <td><span class="badge badge-purple">Enterprise</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon">✓</div>
+  <div class="toast-text">
+    <div class="toast-title" id="toast-title">Sucesso</div>
+    <div class="toast-sub" id="toast-sub">Operação realizada</div>
+  </div>
+</div>
+
+<script>
+
+let currentUser = null;
+let sangrias = [];
+
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+
+function doLogin() {
+  const role = document.getElementById('login-role').value;
+  if (role === 'master') {
+    goTo('screen-master');
+    initMaster();
+  } else if (role === 'admin') {
+    goTo('screen-admin');
+    initAdmin('FarmáciaBom', 'João Dono');
+  } else {
+    goTo('screen-operator');
+    initOperator('FarmáciaBom', 'Maria Alves');
+  }
+  showToast('✓', 'Login realizado', 'Bem-vindo ao CaixaIA!', 'var(--green)');
+}
+
+
+function regStep2() {
+  const nome = document.getElementById('reg-nome').value;
+  const email = document.getElementById('reg-email').value;
+  if (!nome || !email) { showToast('!', 'Campos incompletos', 'Preencha nome e e-mail', 'var(--red)'); return; }
+  document.getElementById('step-1').style.display = 'none';
+  document.getElementById('step-2').style.display = 'block';
+}
+
+function toggleRedeTipo() {
+  const val = document.getElementById('reg-rede-tipo').value;
+  document.getElementById('rede-nova-section').style.display = val === 'nova' ? 'block' : 'none';
+  document.getElementById('rede-existente-section').style.display = val === 'existente' ? 'block' : 'none';
+}
+
+function doRegister() {
+  const rede = document.getElementById('reg-rede').value || document.getElementById('reg-codigo').value;
+  if (!rede) { showToast('!', 'Informe a rede', 'Preencha o nome ou código da rede', 'var(--amber)'); return; }
+  document.getElementById('pending-rede-name').textContent = rede;
+  goTo('screen-pending');
+}
+
+
+function initOperator(rede, nome) {
+  document.getElementById('op-rede-name').textContent = rede;
+  document.getElementById('op-username').textContent = nome;
+  document.getElementById('op-avatar').textContent = nome.split(' ').map(n=>n[0]).join('').substring(0,2);
+  document.getElementById('op-date').textContent = new Date().toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long'});
+
+  // Histórico mock
+  const hist = [
+    {d:'14/05',v:'R$ 4.210,00',s:'R$ 300,00',diff:'+R$ 1,20',cls:'stat-green',badge:'badge-green',bl:'✓ Ok'},
+    {d:'13/05',v:'R$ 3.890,00',s:'R$ 500,00',diff:'-R$ 22,00',cls:'stat-red',badge:'badge-red',bl:'⚠ Desvio'},
+    {d:'12/05',v:'R$ 5.100,00',s:'R$ 800,00',diff:'+R$ 0,00',cls:'stat-green',badge:'badge-green',bl:'✓ Ok'},
+    {d:'11/05',v:'R$ 2.760,00',s:'R$ 200,00',diff:'-R$ 5,30',cls:'stat-red',badge:'badge-amber',bl:'△ Leve'},
+    {d:'10/05',v:'R$ 4.580,00',s:'R$ 600,00',diff:'+R$ 0,80',cls:'stat-green',badge:'badge-green',bl:'✓ Ok'},
+  ];
+  document.getElementById('hist-rows').innerHTML = hist.map(h => `
+    <tr>
+      <td style="color:var(--text);">${h.d}</td>
+      <td>${h.v}</td>
+      <td>${h.s}</td>
+      <td class="${h.cls}">${h.diff}</td>
+      <td><span class="badge ${h.badge}">${h.bl}</span></td>
+    </tr>
+  `).join('');
+}
+
+
+function opView(id, btn) {
+  document.querySelectorAll('#screen-operator .view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#screen-operator .nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = {'view-caixa':'Lançamento de Caixa','view-historico':'Meu Histórico'};
+  document.getElementById('op-page-title').textContent = titles[id] || '';
+}
+
+function admView(id, btn) {
+  document.querySelectorAll('#screen-admin .view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#screen-admin .nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = {
+    'view-dashboard':'Dashboard da Rede',
+    'view-ia':'Análise com IA',
+    'view-relatorio':'Relatório Detalhado',
+    'view-aprovacao':'Aprovação de Cadastros',
+    'view-operadores':'Operadores'
+  };
+  document.getElementById('adm-page-title').textContent = titles[id] || '';
+}
+
+function masterView(id, btn) {
+  document.querySelectorAll('#screen-master .view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#screen-master .nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = {'view-master-dash':'Visão Geral da Plataforma','view-master-redes':'Redes Cadastradas'};
+  document.getElementById('master-page-title').textContent = titles[id] || '';
+}
+
+
+function initAdmin(rede, nome) {
+  document.getElementById('adm-rede-name').textContent = rede;
+  document.getElementById('adm-username').textContent = nome;
+  document.getElementById('adm-avatar').textContent = nome.split(' ').map(n=>n[0]).join('').substring(0,2);
+  document.getElementById('adm-date').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Gráfico
+  const vals = [9200,10800,8400,12100,14200,11500,12840];
+  const max = Math.max(...vals);
+  document.getElementById('dash-chart').innerHTML = vals.map((v,i) => {
+    const h = Math.round((v/max)*100);
+    const cls = i===6?'green-bar':(v<9500?'red-bar':'');
+    return `<div class="bar ${cls}" style="height:${h}%" title="R$ ${v.toLocaleString('pt-BR')}"></div>`;
+  }).join('');
+
+  // Desvios operadores
+  const ops = [
+    {nome:'Carlos M.',init:'CM',diff:-18.40,cls:'stat-red'},
+    {nome:'Ana Lima',init:'AL',diff:-15.90,cls:'stat-red'},
+    {nome:'Breno S.',init:'BS',diff:-13.00,cls:'stat-red'},
+    {nome:'Maria A.',init:'MA',diff:+0.50,cls:'stat-green'},
+  ];
+  document.getElementById('op-desvios').innerHTML = ops.map(o => `
+    <div class="operador-row">
+      <div class="op-avatar">${o.init}</div>
+      <div class="op-info">
+        <div class="op-name">${o.nome}</div>
+        <div class="op-meta">Caixa fechado às 17h02</div>
+      </div>
+      <div class="op-diff ${o.cls}">${o.diff > 0 ? '+' : ''}R$ ${Math.abs(o.diff).toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  // Formas pagamento
+  const payments = [
+    {label:'Dinheiro',val:4820,color:'var(--cyan)'},
+    {label:'Crédito',val:3940,color:'var(--purple)'},
+    {label:'Pix',val:2100,color:'var(--green)'},
+    {label:'Débito',val:1200,color:'var(--amber)'},
+    {label:'Convênio',val:780,color:'var(--text3)'},
+  ];
+  const maxP = Math.max(...payments.map(p=>p.val));
+  document.getElementById('payment-bars').innerHTML = payments.map(p => `
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:0.82rem;color:var(--text2);">${p.label}</span>
+        <span style="font-size:0.82rem;font-weight:500;color:var(--text);">R$ ${p.val.toLocaleString('pt-BR')}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${Math.round((p.val/maxP)*100)}%;background:${p.color};"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Aprovação
+  const pendings = [
+    {nome:'Lucas Ferreira',email:'lucas@gmail.com',tipo:'Operador',rede:'FarmáciaBom',id:'p1'},
+    {nome:'Carla Souza',email:'carla@farma.com',tipo:'Operador',rede:'FarmáciaBom',id:'p2'},
+    {nome:'Rafael Gomes',email:'rafael@gmail.com',tipo:'Administrador',rede:'FarmáciaBom',id:'p3'},
+  ];
+  document.getElementById('pending-list').innerHTML = pendings.map(p => `
+    <div class="pending-item" id="${p.id}">
+      <div class="op-avatar" style="width:42px;height:42px;font-size:14px;">${p.nome.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
+      <div class="pending-info">
+        <div class="pending-nome">${p.nome}</div>
+        <div class="pending-meta">${p.email} · ${p.tipo} · Rede: <span class="pending-rede">${p.rede}</span></div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-approve" onclick="approvePending('${p.id}', '${p.nome}')">✓ Aprovar</button>
+        <button class="btn-reject" onclick="rejectPending('${p.id}')">✕ Recusar</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Relatório
+  const rel = [
+    {d:'15/05',op:'Maria A.',t:'08-17h',v:'R$ 3.842,00',s:'R$ 500,00',diff:'+R$ 0,50',ok:true},
+    {d:'15/05',op:'Carlos M.',t:'08-17h',v:'R$ 2.910,00',s:'R$ 300,00',diff:'-R$ 18,40',ok:false},
+    {d:'15/05',op:'Ana Lima',t:'13-22h',v:'R$ 3.220,00',s:'R$ 600,00',diff:'-R$ 15,90',ok:false},
+    {d:'14/05',op:'Breno S.',t:'08-17h',v:'R$ 4.100,00',s:'R$ 700,00',diff:'+R$ 2,10',ok:true},
+    {d:'14/05',op:'Maria A.',t:'08-17h',v:'R$ 3.780,00',s:'R$ 400,00',diff:'-R$ 5,30',ok:false},
+  ];
+  document.getElementById('rel-rows').innerHTML = rel.map(r => `
+    <tr>
+      <td style="color:var(--text);">${r.d}</td>
+      <td>${r.op}</td>
+      <td style="color:var(--text3);">${r.t}</td>
+      <td>${r.v}</td>
+      <td>${r.s}</td>
+      <td class="${r.ok?'stat-green':'stat-red'}">${r.diff}</td>
+      <td><span class="badge ${r.ok?'badge-green':'badge-red'}">${r.ok?'✓ Ok':'⚠ Desvio'}</span></td>
+    </tr>
+  `).join('');
+
+  // Operadores
+  const opRows = [
+    {nome:'Maria Alves',init:'MA',status:'Ativo',fech:28,fat:'R$ 89.420',dif:'+R$ 3,20',score:'98/100',sc:'stat-green'},
+    {nome:'Carlos M.',init:'CM',status:'Ativo',fech:25,fat:'R$ 71.200',dif:'-R$ 148,30',score:'72/100',sc:'stat-amber'},
+    {nome:'Ana Lima',init:'AL',status:'Ativo',fech:22,fat:'R$ 64.800',dif:'-R$ 91,50',score:'81/100',sc:'stat-amber'},
+    {nome:'Breno S.',init:'BS',status:'Ativo',fech:30,fat:'R$ 95.100',dif:'+R$ 12,10',score:'96/100',sc:'stat-green'},
+    {nome:'Juliana R.',init:'JR',status:'Ativo',fech:18,fat:'R$ 52.300',dif:'-R$ 32,00',score:'88/100',sc:'stat-green'},
+  ];
+  document.getElementById('op-table-rows').innerHTML = opRows.map(o => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="op-avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0;">${o.init}</div>
+          <span style="color:var(--text);font-weight:500;">${o.nome}</span>
+        </div>
+      </td>
+      <td><span class="badge badge-green">${o.status}</span></td>
+      <td>${o.fech}</td>
+      <td>${o.fat}</td>
+      <td class="${o.dif.startsWith('+') ? 'stat-green' : 'stat-red'}">${o.dif}</td>
+      <td class="${o.sc} " style="font-weight:600;">${o.score}</td>
+    </tr>
+  `).join('');
+
+  // Desvio semana
+  const semana = [
+    {label:'Seg',val:-5.2,pos:false},
+    {label:'Ter',val:+1.0,pos:true},
+    {label:'Qua',val:-22.4,pos:false},
+    {label:'Qui',val:-8.9,pos:false},
+    {label:'Sex',val:+0.5,pos:true},
+    {label:'Sáb',val:-11.3,pos:false},
+    {label:'Dom',val:-0.9,pos:false},
+  ];
+  document.getElementById('desvio-semana').innerHTML = semana.map(s => `
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+        <span style="font-size:0.78rem;color:var(--text2);">${s.label}</span>
+        <span style="font-size:0.78rem;font-weight:500;color:${s.pos?'var(--green)':'var(--red)'};">${s.pos?'+':''}R$ ${Math.abs(s.val).toFixed(2)}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill ${s.pos?'green':'red'}" style="width:${Math.min(100,Math.abs(s.val/25)*100)}%;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+
+function initMaster() {}
+
+
+function approvePending(id, nome) {
+  const el = document.getElementById(id);
+  el.classList.add('approved');
+  el.querySelector('.action-btns').innerHTML = '<span class="badge badge-green">✓ Aprovado</span>';
+  showToast('✓', 'Acesso liberado', `${nome} pode entrar na rede agora`, 'var(--green)');
+}
+
+function rejectPending(id) {
+  const el = document.getElementById(id);
+  el.classList.add('rejected');
+  el.querySelector('.action-btns').innerHTML = '<span class="badge badge-red">✕ Recusado</span>';
+}
+
+
+function addSangria() {
+  const list = document.getElementById('sangria-list');
+  const div = document.createElement('div');
+  div.className = 'sangria-item';
+  div.innerHTML = `
+    <input placeholder="Motivo da sangria..." oninput="calcResumo()">
+    <input class="sangria-valor" placeholder="R$ 0,00" type="number" step="0.01" oninput="calcResumo()">
+    <button class="rm-btn" onclick="rmSangria(this)">✕</button>
+  `;
+  list.appendChild(div);
+}
+
+function rmSangria(btn) {
+  btn.closest('.sangria-item').remove();
+  calcResumo();
+}
+
+
+function calcResumo() {
+  const fundo = parseFloat(document.getElementById('fundo-caixa').value) || 0;
+  const vDin = parseFloat(document.getElementById('venda-dinheiro').value) || 0;
+  const vCred = parseFloat(document.getElementById('venda-credito').value) || 0;
+  const vDeb = parseFloat(document.getElementById('venda-debito').value) || 0;
+  const vPix = parseFloat(document.getElementById('venda-pix').value) || 0;
+  const vConv = parseFloat(document.getElementById('venda-convenio').value) || 0;
+  const vOut = parseFloat(document.getElementById('venda-outros').value) || 0;
+  const troco = parseFloat(document.getElementById('troco-total').value) || 0;
+  const devol = parseFloat(document.getElementById('devolucoes').value) || 0;
+  const fisico = parseFloat(document.getElementById('dinheiro-fisico').value) || 0;
+
+  let totalSangrias = 0;
+  document.querySelectorAll('.sangria-valor').forEach(i => {
+    totalSangrias += parseFloat(i.value) || 0;
+  });
+
+  const totalVendas = vDin + vCred + vDeb + vPix + vConv + vOut;
+  const esperado = fundo + vDin - totalSangrias - troco - devol;
+  const diff = fisico - esperado;
+
+  const fmt = v => 'R$ ' + Math.abs(v).toFixed(2).replace('.',',');
+  const fmtSign = v => (v >= 0 ? '+' : '-') + 'R$ ' + Math.abs(v).toFixed(2).replace('.',',');
+
+  document.getElementById('r-fundo').textContent = fmt(fundo);
+  document.getElementById('r-vendas').textContent = fmt(totalVendas);
+  document.getElementById('r-sangrias').textContent = fmt(totalSangrias);
+  document.getElementById('r-devolucoes').textContent = fmt(devol);
+  document.getElementById('r-troco').textContent = fmt(troco);
+  document.getElementById('r-esperado').textContent = fmt(esperado);
+  document.getElementById('r-fisico').textContent = fmt(fisico);
+
+  const diffEl = document.getElementById('r-diff');
+  const statusEl = document.getElementById('r-status');
+
+  diffEl.textContent = fmtSign(diff);
+
+  if (fisico === 0 && fundo === 0) {
+    diffEl.className = 'val stat-neutral';
+    statusEl.className = 'resumo-status status-warn';
+    statusEl.textContent = 'Preencha os campos';
+  } else if (Math.abs(diff) < 0.1) {
+    diffEl.className = 'val stat-green';
+    statusEl.className = 'resumo-status status-ok';
+    statusEl.textContent = '✓ Caixa fechado — sem diferença';
+  } else if (Math.abs(diff) <= 5) {
+    diffEl.className = 'val stat-amber';
+    statusEl.className = 'resumo-status status-warn';
+    statusEl.textContent = '△ Pequena diferença detectada';
+  } else {
+    diffEl.className = 'val stat-down';
+    statusEl.className = 'resumo-status status-err';
+    statusEl.textContent = '⚠ Diferença relevante — IA vai analisar';
+  }
+}
+
+
+function fecharCaixa() {
+  showToast('🔒', 'Caixa enviado!', 'IA analisando dados agora...', 'var(--cyan)');
+  setTimeout(() => {
+    showToast('✓', 'Análise concluída', 'Administrador notificado com o relatório', 'var(--green)');
+  }, 2500);
+}
+
+
+async function runIAAnalysis() {
+  const area = document.getElementById('ia-result-area');
+  document.getElementById('ia-timestamp').textContent = new Date().toLocaleTimeString('pt-BR');
+
+  area.innerHTML = `
+    <div class="ia-loading">
+      <div class="ia-dots"><span></span><span></span><span></span></div>
+      Processando dados do dia com IA...
+    </div>
+  `;
+
+  const prompt = `Você é um analista especialista em auditoria de caixa para farmácias. Analise os seguintes dados de fechamento de caixa de hoje e identifique onde estão vindo as perdas de capital:
+
+Dados do dia:
+- Faturamento bruto: R$ 12.840,00
+- Total de sangrias: R$ 2.100,00
+- Devoluções/cancelamentos: R$ 320,00  
+- Diferença total identificada: -R$ 47,30
+- Caixas com desvio: 3 operadores (Carlos M.: -R$ 18,40 | Ana Lima: -R$ 15,90 | Breno S.: -R$ 13,00)
+- Padrão da semana: desvios maiores na quarta e sábado
+- Forma de pagamento com mais erro: dinheiro em espécie
+- Total de operadores: 5 operadores, 4 fecharam no horário
+
+Forneça uma análise concisa em bullet points identificando: 1) Principal origem das perdas, 2) Padrão comportamental dos operadores com desvio, 3) Recomendação imediata para o administrador. Seja direto, técnico e prático. Máximo 4 pontos.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || 'Erro ao obter análise.';
+
+    // Parsear e exibir insights
+    const lines = text.split('\n').filter(l => l.trim() && l.trim() !== '');
+
+    area.innerHTML = `
+      <div class="ia-content" style="margin-bottom:1rem;">${lines[0] || ''}</div>
+      <div class="ia-insights">
+        ${lines.slice(1).map((line, i) => {
+          const trimmed = line.replace(/^[-•*\d.)\s]+/, '').trim();
+          if (!trimmed) return '';
+          const types = ['crit','warn','info','ok'];
+          const icons = ['⚠','△','◉','✓'];
+          const t = types[i % 4];
+          const ic = icons[i % 4];
+          return `
+            <div class="insight-item ${t}">
+              <div class="insight-icon">${ic}</div>
+              <div class="insight-text">${trimmed}</div>
+            </div>
+          `;
+        }).filter(Boolean).join('')}
+      </div>
+    `;
+  } catch (err) {
+    area.innerHTML = `
+      <div class="ia-insights">
+        <div class="insight-item crit">
+          <div class="insight-icon">⚠</div>
+          <div class="insight-text"><strong>Erro ao conectar com a IA.</strong> Verifique sua conexão e tente novamente.</div>
+        </div>
+        <div class="insight-item warn">
+          <div class="insight-icon">△</div>
+          <div class="insight-text"><strong>Análise local:</strong> Com base nos dados, os operadores Carlos M. (-R$ 18,40), Ana Lima (-R$ 15,90) e Breno S. (-R$ 13,00) somam R$ 47,30 em diferenças — padrão recorrente às quartas. Recomenda-se revisão do processo de troco neste turno.</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+
+function showToast(icon, title, sub, color) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-icon').style.color = color;
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-sub').textContent = sub;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  calcResumo();
+});
+</script>
+</body>
+</html>
